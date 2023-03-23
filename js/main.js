@@ -91,7 +91,7 @@ var canvas = document.getElementById("renderCanvas");
 		// var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
 		var light = new BABYLON.PointLight("light1", new BABYLON.Vector3(10, 10, 0));
 		// light.rotate(BABYLON.Axis.Y, Math.PI/3, BABYLON.Space.LOCAL);
-		light.intensity = 100;
+		light.intensity = 0.1;
 		var shadowGenerator = new BABYLON.ShadowGenerator(512, light);
 		// shadowGenerator.getShadowMap().renderList.push(the_mesh_that_casts_a_shadow);
 		// mesh_that_receives_the_shadow.receiveShadows = true;
@@ -125,8 +125,8 @@ var canvas = document.getElementById("renderCanvas");
 			height: 0.1
 		}, scene);
 		matGround  = new BABYLON.StandardMaterial("material", scene); 
-		matGround.diffuseTexture = new BABYLON.Texture("../models/texture/1.png");
-		matGround.emissiveTexture = new BABYLON.Texture("../models/texture/1.png");
+		matGround.diffuseTexture = new BABYLON.Texture("../models/texture/tex_u1_v1_diffuse.jpg");
+		matGround.emissiveTexture = new BABYLON.Texture("../models/texture/tex_u1_v1_diffuse.jpg");
 		ground.material = matGround; 
 		
 		ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
