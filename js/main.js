@@ -91,8 +91,14 @@ var canvas = document.getElementById("renderCanvas");
 		// var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
 		var light = new BABYLON.PointLight("light1", new BABYLON.Vector3(10, 10, 0));
 		// light.rotate(BABYLON.Axis.Y, Math.PI/3, BABYLON.Space.LOCAL);
-		light.intensity = 0.1;
-		var shadowGenerator = new BABYLON.ShadowGenerator(512, light);
+		light.intensity = 100;
+		var shadowGenerator = new BABYLON.ShadowGenerator(2048, light);
+		// light.rotate(BABYLON.Axis.Y, 3*Math.PI/2, BABYLON.Space.LOCAL);
+		// debug axes
+		const axes = new BABYLON.AxesViewer(scene, 2);
+		axes.xAxis.parent = light;
+		axes.yAxis.parent = light;
+		axes.zAxis.parent = light;
 		// shadowGenerator.getShadowMap().renderList.push(the_mesh_that_casts_a_shadow);
 		// mesh_that_receives_the_shadow.receiveShadows = true;
 	
@@ -117,20 +123,33 @@ var canvas = document.getElementById("renderCanvas");
 		wheelAxleCS = new Ammo.btVector3(-1, 0, 0);
 		
 		//create our ground floor
+		BABYLON.SceneLoader.ImportMesh(
+            null,
+            'models/',
+            'map.glb',
+            scene,
+            (meshArray)=>{
+				let ground = new BABYLON.MeshBuilder.CreateBox('box', {
+					width: 100,
+					depth: 100,
+					height: 0.1
+				}, scene);
+				matGround  = new BABYLON.StandardMaterial("material", scene); 
+				matGround.alpha = 0.1;
+				ground.material = matGround; 
+				ground.translate(BABYLON.Axis.Y, -2, BABYLON.Space.WORLD);
+
+				let ground2 = meshArray[0];
+				ground2.position.z = 10;
+
+				
+				ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
+				ground2.physicsImpostor = new BABYLON.PhysicsImpostor(ground2, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
+				ground.receiveShadows = true;
+				ground2.receiveShadows = true;
+		});
 		// var ground = BABYLON.Mesh.CreateGround("ground", 460, 460, 2);
 		// ground.material = new BABYLON.GridMaterial("groundMaterial");
-		let ground = new BABYLON.MeshBuilder.CreateBox('box', {
-			width: 100,
-			depth: 100,
-			height: 0.1
-		}, scene);
-		matGround  = new BABYLON.StandardMaterial("material", scene); 
-		matGround.diffuseTexture = new BABYLON.Texture("../models/texture/tex_u1_v1_diffuse.jpg");
-		matGround.emissiveTexture = new BABYLON.Texture("../models/texture/tex_u1_v1_diffuse.jpg");
-		ground.material = matGround; 
-		
-		ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
-		ground.receiveShadows = true;
 
 
 		var checkModels = 0;
@@ -144,15 +163,15 @@ var canvas = document.getElementById("renderCanvas");
                 let vaz = meshArray[0];
 				matVaz  = new BABYLON.StandardMaterial("material", scene); 
 				// matVaz.diffuseTexture = new BABYLON.Texture("../models/texture/1.png");
-				matVaz.emissiveTexture = new BABYLON.Texture("../models/texture/1.png");
+				// matVaz.emissiveColor = new BABYLON.Color3(255, 255, 255);
 				// vaz.diffuseTexture = new BABYLON.Texture("../models/texture/tex_u1_v1_diffuse.jpg");
-				vaz.material = matVaz;
+				// vaz.material = matVaz;
 				// vaz.scalling = new BABYLON.Vector3(0.1,0.1,0.1);
 				// vaz.rotateion = new BABYLON.Vector3(0,0,90);
 				// vaz.rotate(BABYLON.Axis.Z, Math.PI/4, BABYLON.Space.WORLD);
                 // vaz.position = new BABYLON.Vector3(0,0,0);
 
-				createVehicle(scene, new BABYLON.Vector3(0, 4, -20), ZERO_QUATERNION, vaz);
+				createVehicle(scene, new BABYLON.Vector3(0, 4, 0), ZERO_QUATERNION, vaz);
 				
 				//attach key event handlers
 				window.addEventListener( 'keydown', keydown);
