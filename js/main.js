@@ -34,44 +34,44 @@ var canvas = document.getElementById("renderCanvas");
 
 		//This demo is based on this PG: https://playground.babylonjs.com/#609QKP#2
 		
-		var chassisWidth = 1.8;	
+		var chassisWidth = 1.8;
 		var chassisHeight = .6;
 		var chassisLength = 4;
 		var massVehicle = 200;
-		
-		var wheelAxisPositionBack = -2;
+
+		var wheelAxisPositionBack = -1;
 		var wheelRadiusBack = .4;
 		var wheelWidthBack = .3;
 		var wheelHalfTrackBack = 1.2;
 		var wheelAxisHeightBack = 0.4;
-		
-		var wheelAxisFrontPosition = 2.0;
+
+		var wheelAxisFrontPosition = 1.0;
 		var wheelHalfTrackFront = 1.2;
 		var wheelAxisHeightFront = 0.4;
 		var wheelRadiusFront = .4;
 		var wheelWidthFront = .3;
-		
+
 		var friction = 5;
 		var suspensionStiffness = 10;
 		var suspensionDamping = 0.3;
 		var suspensionCompression = 4.4;
 		var suspensionRestLength = 0.6;
 		var rollInfluence = 0.0;
-		
+
 		var steeringIncrement = .02;
 		var steeringClamp = 0.4;
 		var maxEngineForce = 500;
 		var maxBreakingForce = 10;
 		var incEngine = 10.0;
-		
+
 		var FRONT_LEFT = 0;
 		var FRONT_RIGHT = 1;
 		var BACK_LEFT = 2;
 		var BACK_RIGHT = 3;
-								
+						
 		var wheelDirectionCS0;
 		var wheelAxleCS;
-				
+		
 		var engineForce = 0;
 		var vehicleSteering = 0;
 		var breakingForce = 0;
@@ -83,29 +83,39 @@ var canvas = document.getElementById("renderCanvas");
 		var scene = new BABYLON.Scene(engine);
 		
 		//we create our car follow camera in createChassisMesh function
-		// var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10));
-		// camera.setTarget(BABYLON.Vector3.Zero());
-		// camera.attachControl(canvas, true);
+		var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10));
+		camera.setTarget(BABYLON.Vector3.Zero());
+		camera.attachControl(canvas, true);
 		
 		//create our light
 		// var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
 		var light = new BABYLON.PointLight("light1", new BABYLON.Vector3(10, 10, 0));
 		// light.rotate(BABYLON.Axis.Y, Math.PI/3, BABYLON.Space.LOCAL);
 		light.intensity = 100;
-		var shadowGenerator = new BABYLON.ShadowGenerator(2048, light);
-		// light.rotate(BABYLON.Axis.Y, 3*Math.PI/2, BABYLON.Space.LOCAL);
-		// debug axes
+		var shadowGenerator = new BABYLON.ShadowGenerator(4096, light);
+
 		const axes = new BABYLON.AxesViewer(scene, 2);
 		axes.xAxis.parent = light;
 		axes.yAxis.parent = light;
 		axes.zAxis.parent = light;
-		// shadowGenerator.getShadowMap().renderList.push(the_mesh_that_casts_a_shadow);
-		// mesh_that_receives_the_shadow.receiveShadows = true;
+
+
+		//we create some materials for our obstacles
+		redMaterial = new BABYLON.StandardMaterial("RedMaterial");
+		redMaterial.diffuseColor = new BABYLON.Color3(0.8,0.4,0.5);
+		redMaterial.emissiveColor = new BABYLON.Color3(0.8,0.4,0.5);
+
+		blueMaterial = new BABYLON.StandardMaterial("RedMaterial");
+		blueMaterial.diffuseColor = new BABYLON.Color3(0.5,0.4,0.8);
+		blueMaterial.emissiveColor = new BABYLON.Color3(0.5,0.4,0.8);
+
+		greenMaterial = new BABYLON.StandardMaterial("RedMaterial");
+		greenMaterial.diffuseColor = new BABYLON.Color3(0.5,0.8,0.5);
+		greenMaterial.emissiveColor = new BABYLON.Color3(0.5,0.8,0.5);
 	
 		//load our wheel material
 		wheelMaterial = new BABYLON.StandardMaterial("WheelMaterial"); 
 		wheelMaterial.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/wheel.png");
-		wheelMaterial.emissiveTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/wheel.png");
 		
 		//we store the wheel face UVs once and reuse for each wheel		
 		wheelUV[0] = new BABYLON.Vector4(0, 0, 1, 1);
@@ -123,196 +133,296 @@ var canvas = document.getElementById("renderCanvas");
 		wheelAxleCS = new Ammo.btVector3(-1, 0, 0);
 		
 		//create our ground floor
+		// var ground = BABYLON.Mesh.CreateGround("ground", 460, 460, 2);
+		// ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
+		// ground.material = new BABYLON.GridMaterial("groundMaterial");
+		let ground = new BABYLON.MeshBuilder.CreateBox('box', {
+			width: 100,
+			depth: 100,
+			height: 0.1
+		}, scene);
+		matGround  = new BABYLON.StandardMaterial("material", scene); 
+		matGround.alpha = 0.7;
+		ground.material = matGround; 
+		// ground.translate(BABYLON.Axis.Y, -2, BABYLON.Space.WORLD);
+
+		
+		ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
+		ground.receiveShadows = true;
+
+		// //create obstacles
+		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,25),new BABYLON.Vector3(-Math.PI/8,0,0),0);
+		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(25,0,0),new BABYLON.Vector3(-Math.PI/8,Math.PI/2,0),0);
+		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,-25),new BABYLON.Vector3(Math.PI/8,0,0),0);
+		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(-25,0,0),new BABYLON.Vector3(Math.PI/8,Math.PI/2,0),0);
+	   
+		// //we randomize the creation of obstacles by making boxes of arbitrary size and orientation
+		// let s = new BABYLON.Vector3();
+		// let p = new BABYLON.Vector3();
+		// let r = new BABYLON.Vector3();
+		// for(let i=0;i<20;i++){
+		// 	let m = Math.random()*300-150+5;
+		// 	let m3 = Math.random()*300-150+5;
+		// 	let m2 = Math.random()*10;
+		// 	s.set(m2,m2,m2);
+		// 	p.set(m3,0,m);
+		// 	r.set(m,m,m);
+		// 	createObstacle(s,p,r,0);
+		// }
+
+		// //we randomize some more obstacles by making boxes of arbitrary size and orientation
+		// for(let i=0;i<30;i++){
+		// 	let m = Math.random()*300-150+5;
+		// 	let m3 = Math.random()*300-150+5;
+		// 	let m2 = Math.random()*3;
+		// 	s.set(m2,m2,m2);
+		// 	p.set(m3,0,m);
+		// 	r.set(m,m,m);
+		// 	createObstacle(s,p,r,5);
+		// }
+
+		// //load the pink spiral ramp mesh
+		// loadTriangleMesh(scene);
+
+		//create our car
+		// createVehicle(scene, new BABYLON.Vector3(0, 4, -20), ZERO_QUATERNION);
+
+		scene.clearColor = new BABYLON.Color3.FromHexString("#10111e");
+                scene.ambientColor = BABYLON.Color3.White();
+
 		BABYLON.SceneLoader.ImportMesh(
             null,
             'models/',
             'map.glb',
             scene,
             (meshArray)=>{
-				let ground = new BABYLON.MeshBuilder.CreateBox('box', {
-					width: 100,
-					depth: 100,
-					height: 0.1
-				}, scene);
-				matGround  = new BABYLON.StandardMaterial("material", scene); 
-				matGround.alpha = 0.1;
-				ground.material = matGround; 
-				ground.translate(BABYLON.Axis.Y, -2, BABYLON.Space.WORLD);
-
-				let ground2 = meshArray[0];
-				ground2.position.z = 10;
-
+                let map = meshArray[0];
+				map.position.y = 1;
+				map.position.x = 2;
 				
-				ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
-				ground2.physicsImpostor = new BABYLON.PhysicsImpostor(ground2, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
-				ground.receiveShadows = true;
-				ground2.receiveShadows = true;
-		});
-		// var ground = BABYLON.Mesh.CreateGround("ground", 460, 460, 2);
-		// ground.material = new BABYLON.GridMaterial("groundMaterial");
+				const axes = new BABYLON.AxesViewer(scene, 2);
+				axes.xAxis.parent = chassisMesh;
+				axes.yAxis.parent = chassisMesh;
+				axes.zAxis.parent = chassisMesh;
 
+				map.physicsImpostor = new BABYLON.PhysicsImpostor(
+					map, 
+					BABYLON.PhysicsImpostor.BoxImpostor, 
+					{ 
+						mass: 0, 
+						friction: 0.5, 
+						restitution: 0.7 
+					}
+				);
+				shadowGenerator.addShadowCaster(map);
+			}
+		);
 
-		var checkModels = 0;
+		// var vaz = 0;
+		var checkVaz = false;
+		chassisMesh = 0;
 		//create our car
 		BABYLON.SceneLoader.ImportMesh(
             null,
             'models/',
-            'vaz_2104.glb',
+            'lada_2106.glb',
             scene,
             (meshArray)=>{
-                let vaz = meshArray[0];
-				matVaz  = new BABYLON.StandardMaterial("material", scene); 
-				// matVaz.diffuseTexture = new BABYLON.Texture("../models/texture/1.png");
-				// matVaz.emissiveColor = new BABYLON.Color3(255, 255, 255);
-				// vaz.diffuseTexture = new BABYLON.Texture("../models/texture/tex_u1_v1_diffuse.jpg");
-				// vaz.material = matVaz;
-				// vaz.scalling = new BABYLON.Vector3(0.1,0.1,0.1);
-				// vaz.rotateion = new BABYLON.Vector3(0,0,90);
-				// vaz.rotate(BABYLON.Axis.Z, Math.PI/4, BABYLON.Space.WORLD);
-                // vaz.position = new BABYLON.Vector3(0,0,0);
-
-				createVehicle(scene, new BABYLON.Vector3(0, 4, 0), ZERO_QUATERNION, vaz);
+                chassisMesh = meshArray[0];
 				
-				//attach key event handlers
-				window.addEventListener( 'keydown', keydown);
-				window.addEventListener( 'keyup', keyup);
+				const axes = new BABYLON.AxesViewer(scene, 2);
+				axes.xAxis.parent = chassisMesh;
+				axes.yAxis.parent = chassisMesh;
+				axes.zAxis.parent = chassisMesh;
 
-				var time = 0;
-				
-				//register prerender callback to initiate 
-				scene.registerBeforeRender(function(){
+				chassisMesh.scaling = new BABYLON.Vector3(0.45,0.45,0.45);
+				shadowGenerator.addShadowCaster(chassisMesh);
+			}
+		);
+		
+		//attach key event handlers
+		window.addEventListener( 'keydown', keydown);
+		window.addEventListener( 'keyup', keyup);
 
-					//time step delta (dt)
-					var dt = engine.getDeltaTime().toFixed()/1000;
-					time += dt;
-					var val = Math.round(Math.abs(Math.sin(time*5)));
-					
-					if(vehicleReady){
-						//get the cars current speed from ammo.js
-						var speed = vehicle.getCurrentSpeedKmHour();
-						var maxSteerVal = 0.2;
-						breakingForce = 0;
-						engineForce = 0;
+		var time = 0;
+		
+		//register prerender callback to initiate 
+		scene.registerBeforeRender(function(){
+			if(chassisMesh != 0 && !checkVaz){
+				checkVaz = true
+				createVehicle(scene, new BABYLON.Vector3(0, 4, -20), ZERO_QUATERNION);
 
-						//see if we are accelerating
-						if(actions.acceleration){
-							//are we decreasing or  increasing
-							if (speed < -1){
-								breakingForce = maxBreakingForce;
-							}else {
-								engineForce = maxEngineForce;
-							}
-								
-						} else if(actions.braking){
-							//are we decreasing or increasing to signify we want to go reverse
-							if (speed > 1){
-								breakingForce = maxBreakingForce;
-							}else {
-								engineForce = -maxEngineForce ;
-							}
-						} 
-						
-						//are we turning right
-						if(actions.right)
-						{			
-							if (vehicleSteering < steeringClamp){
-								vehicleSteering += steeringIncrement;
-							}
-								
-						} 
-						//are we turning left
-						else if(actions.left)
-						{									
-							if (vehicleSteering > -steeringClamp){
-								vehicleSteering -= steeringIncrement;
-							}
-								
-						} else {
-							vehicleSteering *= 0.95 ; //this dampens the return of the wheel when the user releases the key
-						}
-								
-						//apply forces on the vehicle
-						vehicle.applyEngineForce(engineForce, FRONT_LEFT);
-						vehicle.applyEngineForce(engineForce, FRONT_RIGHT);
-						
-						//apply break on the vehicle with unequal amount of force for front and rear wheels				
-						vehicle.setBrake(breakingForce / 2, FRONT_LEFT);
-						vehicle.setBrake(breakingForce / 2, FRONT_RIGHT);
-						vehicle.setBrake(breakingForce, BACK_LEFT);
-						vehicle.setBrake(breakingForce, BACK_RIGHT);
-								
-						//apply the steering value
-						vehicle.setSteeringValue(vehicleSteering, FRONT_LEFT);
-						vehicle.setSteeringValue(vehicleSteering, FRONT_RIGHT);
-								
-						//once we have applied all forces to ammo.js vehicle, we need to update the 
-						//position and orientation of our car chassis and wheel.  				
-						var tm, p, q, i;
-						var n = vehicle.getNumWheels();
-						
-						//get the updated position and orientation of each wheel
-						for (i = 0; i < n; i++) {
-							vehicle.updateWheelTransform(i, true);
-							tm = vehicle.getWheelTransformWS(i);
-							p = tm.getOrigin();
-							q = tm.getRotation();
-							wheelMeshes[i].position.set(p.x(), p.y(), p.z());
-							wheelMeshes[i].rotationQuaternion.set(q.x(), q.y(), q.z(), q.w());
-							
-						}
-						
-						//get the updated position and orientation of our car chassis
-						tm = vehicle.getChassisWorldTransform();
-						p = tm.getOrigin();
-						q = tm.getRotation();
+				// chassisMesh.rotate(BABYLON.Axis.Z, 3*Math.PI/2, BABYLON.Space.LOCAL);
+				// chassisMesh.position.y = 10;
+			}
 
-						// vaz.position = new BABYLON.Vector3(-10,0,0);
-						vaz.position.set(p.x(), p.y(), p.z()); 
-						// chassisMesh.position.x = p.x();
-						vaz.rotationQuaternion.set(q.x(), q.y(), q.z(), q.w());   
+			//time step delta (dt)
+			var dt = engine.getDeltaTime().toFixed()/1000;
+			time += dt;
+			var val = Math.round(Math.abs(Math.sin(time*5)));
+			
+			if(vehicleReady){
+				//get the cars current speed from ammo.js
+				var speed = vehicle.getCurrentSpeedKmHour();
+				var maxSteerVal = 0.2;
+				breakingForce = 0;
+				engineForce = 0;
 
-						// vaz.translate(BABYLON.Axis.X, 10.5, BABYLON.Space.LOCAL);
-						// vaz.translate(BABYLON.Axis.Y, 10.5, BABYLON.Space.LOCAL);
-						vaz.translate(BABYLON.Axis.Z, 1.8, BABYLON.Space.LOCAL);
-						vaz.scaling = new BABYLON.Vector3(0.2,0.2,0.2);
-						// shadowGenerator.getShadowMap().renderList.push(vaz);
-						shadowGenerator.addShadowCaster(vaz);
-						
-						// shadowGenerator.getShadowMap().renderList.push(vaz);
-						// vaz.receiveShadows = true;
-						vaz.rotate(BABYLON.Axis.Y, 3*Math.PI/2, BABYLON.Space.LOCAL);
-						// vaz.physicsImpostor = new BABYLON.PhysicsImpostor(vaz, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, friction: 0.5, restitution: 0.7 });
+				//see if we are accelerating
+				if(actions.acceleration){
+					//are we decreasing or  increasing
+					if (speed < -1){
+						breakingForce = maxBreakingForce;
+					}else {
+						engineForce = maxEngineForce;
 					}
-				}); 
-				// mesh = vaz;
-				// chassisMesh = vaz;
-            },
-        )
-		// BABYLON.SceneLoader.ImportMesh(
-		// 	null,
-        //     'models/',
-        //     'lada_2106.glb',
-        //     scene,
-        //     (meshArray)=>{
-		// 		vaz2 = meshArray[0];
-		// 		// box.translate(BABYLON.Axis.X, 10, BABYLON.Space.LOCAL);
-		// 		box = new BABYLON.MeshBuilder.CreateBox("box", {width: 2, depth: 2, height: 2});
-		// 		// box.position = new BABYLON.Vector3(0, 5, 0);
-		// 		box.translate(BABYLON.Axis.X, 10, BABYLON.Space.LOCAL);
-		// 		box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 50, friction: 0.5, restitution: 0.7 });
-		// 		// meshArray[1].position = new BABYLON.Vector3(0, 0, 20);
-		// 		shadowGenerator.getShadowMap().renderList.push(vaz);
-		// 		shadowGenerator.addShadowCaster(vaz);
+						
+				} else if(actions.braking){
+					//are we decreasing or increasing to signify we want to go reverse
+					if (speed > 1){
+						breakingForce = maxBreakingForce;
+					}else {
+						engineForce = -maxEngineForce ;
+					}
+				} 
+
+				//are we turning right
+				if(actions.right)
+				{ 
+					if (vehicleSteering < steeringClamp){
+						vehicleSteering += steeringIncrement;
+					}
+						
+				} 
+				//are we turning left
+				else if(actions.left)
+				{
+					if (vehicleSteering > -steeringClamp){
+						vehicleSteering -= steeringIncrement;
+					}
+						
+				} else {
+					vehicleSteering *= 0.95 ; //this dampens the return of the wheel when the user releases the key
+				}
+						
+				//apply forces on the vehicle
+				vehicle.applyEngineForce(engineForce, FRONT_LEFT);
+				vehicle.applyEngineForce(engineForce, FRONT_RIGHT);
 				
-		// 		// shadowGenerator.getShadowMap().renderList.push(vaz);
-		// 		vaz.receiveShadows = true;
-		// 	},
-		// );
+				//apply break on the vehicle with unequal amount of force for front and rear wheels				
+				vehicle.setBrake(breakingForce / 2, FRONT_LEFT);
+				vehicle.setBrake(breakingForce / 2, FRONT_RIGHT);
+				vehicle.setBrake(breakingForce, BACK_LEFT);
+				vehicle.setBrake(breakingForce, BACK_RIGHT);
+						
+				//apply the steering value
+				vehicle.setSteeringValue(vehicleSteering, FRONT_LEFT);
+				vehicle.setSteeringValue(vehicleSteering, FRONT_RIGHT);
+						
+				//once we have applied all forces to ammo.js vehicle, we need to update the 
+				//position and orientation of our car chassis and wheel.  				
+				var tm, p, q, i;
+				var n = vehicle.getNumWheels();
+				
+				//get the updated position and orientation of each wheel
+				for (i = 0; i < n; i++) {
+					vehicle.updateWheelTransform(i, true);
+					tm = vehicle.getWheelTransformWS(i);
+					p = tm.getOrigin();
+					q = tm.getRotation();
+					wheelMeshes[i].position.set(p.x(), p.y(), p.z());
+					wheelMeshes[i].rotationQuaternion.set(q.x(), q.y(), q.z(), q.w());
+					
+				}
+				
+				//get the updated position and orientation of our car chassis
+				tm = vehicle.getChassisWorldTransform();
+				p = tm.getOrigin();
+				q = tm.getRotation();
+				chassisMesh.position.set(p.x(), p.y(), p.z()); 
+				chassisMesh.rotationQuaternion.set(q.x(), q.y(), q.z(), q.w());  
+				
+				// chassisMesh.translate(BABYLON.Axis.Y, 1.8, BABYLON.Space.LOCAL);
+				// chassisMesh.translate(BABYLON.Axis.X, -1.8, BABYLON.Space.LOCAL);
+				// chassisMesh.rotate(BABYLON.Axis.Y, 3*Math.PI/2, BABYLON.Space.LOCAL);
+			} 
+		}); 
 
 		return scene;
 	};
 
-	function createVehicle(scene, pos, quat, car) {
+	function loadTriangleMesh(scene){
+		var physicsWorld = scene.getPhysicsEngine().getPhysicsPlugin().world;
+		BABYLON.SceneLoader.ImportMesh("Loft001", "https://raw.githubusercontent.com/RaggarDK/Baby/baby/", "ramp.babylon", scene, function (newMeshes) {
+			for(let x=0;x<newMeshes.length;x++){
+				let mesh = newMeshes[x];
+				mesh.position.y -= 2.5;
+				mesh.material = redMaterial;
+				let positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+				let normals = mesh.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+				let colors = mesh.getVerticesData(BABYLON.VertexBuffer.ColorKind);
+				let uvs = mesh.getVerticesData(BABYLON.VertexBuffer.UVKind);
+				let indices = mesh.getIndices();
+							
+				mesh.updateFacetData();
+				var localPositions = mesh.getFacetLocalPositions(); 
+				var triangleCount = localPositions.length;
+							
+				let mTriMesh = new Ammo.btTriangleMesh();
+				let removeDuplicateVertices = true;
+				let tmpPos1 = new Ammo.btVector3(0,0,0);
+				let tmpPos2 = new Ammo.btVector3(0,0,0);
+				let tmpPos3 = new Ammo.btVector3(0,0,0);
+							
+				var _g = 0;
+				while(_g < triangleCount) {
+					var i = _g++;
+					var index0 = indices[i * 3];
+					var index1 = indices[i * 3 + 1];
+					var index2 = indices[i * 3 + 2];
+					var vertex0 = new Ammo.btVector3(positions[index0 * 3],positions[index0 * 3 + 1],positions[index0 * 3 + 2]);
+					var vertex1 = new Ammo.btVector3(positions[index1 * 3],positions[index1 * 3 + 1],positions[index1 * 3 + 2]);
+					var vertex2 = new Ammo.btVector3(positions[index2 * 3],positions[index2 * 3 + 1],positions[index2 * 3 + 2]);
+					mTriMesh.addTriangle(vertex0,vertex1,vertex2);
+				}
+										
+				let shape = new Ammo.btBvhTriangleMeshShape( mTriMesh, true, true );
+				let localInertia = new Ammo.btVector3(0, 0, 0);
+				let transform = new Ammo.btTransform;
+
+				transform.setIdentity();
+				transform.setOrigin(new Ammo.btVector3(mesh.position.x,mesh.position.y,mesh.position.z));
+				transform.setRotation(new Ammo.btQuaternion(
+				mesh.rotationQuaternion.x , mesh.rotationQuaternion.y , mesh.rotationQuaternion.z, mesh.rotationQuaternion.w));
+						
+				let motionState = new Ammo.btDefaultMotionState(transform);
+				let rbInfo = new Ammo.btRigidBodyConstructionInfo(0, motionState, shape, localInertia);
+				let body = new Ammo.btRigidBody(rbInfo);
+				physicsWorld.addRigidBody(body);
+			}
+		});			
+	}
+
+	//this function create an arbitrary sized box as an obstacle
+	function createObstacle(size, position, rotation, mass){
+
+		var box = new BABYLON.MeshBuilder.CreateBox("box", {width:size.x, depth:size.z, height:size.y});
+		box.position.set(position.x,position.y,position.z);
+		box.rotation.set(rotation.x,rotation.y,rotation.z);
+		if(!mass){
+			mass = 0;
+			box.material = redMaterial;
+		} else {
+			box.position.y += 5;
+			box.material = blueMaterial;
+
+		}
+		box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: mass, friction: 0.5, restitution: 0.7 });
+	  
+	}
+
+
+	function createVehicle(scene, pos, quat) {
 		//Going Native
 		var physicsWorld = scene.getPhysicsEngine().getPhysicsPlugin().world;
 				
@@ -331,7 +441,7 @@ var canvas = document.getElementById("renderCanvas");
 		geometry.calculateLocalInertia(massVehicle, localInertia);
 		
 		//create the chassis mesh
-		createChassisMesh(scene, chassisWidth, chassisHeight, chassisLength, car);
+		createChassisMesh(scene, chassisWidth, chassisHeight, chassisLength);
 		
 		//
 		var massOffset = new Ammo.btVector3( 0, 0.4, 0);
@@ -392,8 +502,9 @@ var canvas = document.getElementById("renderCanvas");
 	}	
 
 	//this function creates the car chassis and its corresponding lights including brake and reverse lights.
-	function createChassisMesh(scene, w, l, h, car) 
+	function createChassisMesh(scene, w, l, h) 
 	{
+		mesh = chassisMesh;
 		//we create a car follow camera to keep following our car.
 		var camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 10, 10));
 		camera.radius = 10;
@@ -402,7 +513,7 @@ var canvas = document.getElementById("renderCanvas");
 		camera.cameraAcceleration = 0.05;
 		camera.maxCameraSpeed = 400;
 		camera.attachControl(canvas, true);
-		camera.lockedTarget = car; //version 2.5 onwards
+		camera.lockedTarget = mesh; //version 2.5 onwards
 		 
 		//make this as the active scene camera
 		scene.activeCamera = camera;
@@ -413,7 +524,7 @@ var canvas = document.getElementById("renderCanvas");
 		axes.yAxis.parent = mesh;
 		axes.zAxis.parent = mesh;*/
 		
-		// return mesh;
+		return mesh;
 	}
 			
 
@@ -465,12 +576,13 @@ var canvas = document.getElementById("renderCanvas");
 		startRenderLoop(engine, canvas);
 		window.scene = createScene();
 	};
-	initFunction().then(() => {
-		scene.then(returnedScene => { sceneToRender = returnedScene; });
-	});
+	initFunction().then(
+		() => {
+			scene.then(returnedScene => { sceneToRender = returnedScene; });
+		}
+	);
 
     // Resize
     window.addEventListener("resize", function () {
         engine.resize();
     });
-
