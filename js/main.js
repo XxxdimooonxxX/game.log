@@ -39,13 +39,13 @@ var canvas = document.getElementById("renderCanvas");
 		var chassisLength = 4;
 		var massVehicle = 200;
 
-		var wheelAxisPositionBack = -1;
+		var wheelAxisPositionBack = -1.8;
 		var wheelRadiusBack = .4;
 		var wheelWidthBack = .3;
 		var wheelHalfTrackBack = 1.2;
 		var wheelAxisHeightBack = 0.4;
 
-		var wheelAxisFrontPosition = 1.0;
+		var wheelAxisFrontPosition = 2.2;
 		var wheelHalfTrackFront = 1.2;
 		var wheelAxisHeightFront = 0.4;
 		var wheelRadiusFront = .4;
@@ -88,11 +88,25 @@ var canvas = document.getElementById("renderCanvas");
 		camera.attachControl(canvas, true);
 		
 		//create our light
+		// var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(-10, 10, 0));
+		// light2.specular = new BABYLON.Color3(0, 0, 0);
+		// light2.intensity = 500.7;
+		// light2.lightmapMode = BABYLON.Light.LIGHTMAP_SPECULAR;
+		// var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
+
 		// var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
-		var light = new BABYLON.PointLight("light1", new BABYLON.Vector3(10, 10, 0));
-		// light.rotate(BABYLON.Axis.Y, Math.PI/3, BABYLON.Space.LOCAL);
-		light.intensity = 100;
-		var shadowGenerator = new BABYLON.ShadowGenerator(4096, light);
+		// var light = new BABYLON.PointLight("light1", new BABYLON.Vector3(10, 10, 0));
+		var light = new BABYLON.DirectionalLight("light1", new BABYLON.Vector3(-10, -10, 0), scene);
+		// var light = new BABYLON.SpotLight("spotLight", new BABYLON.Vector3(10, 10, 0), new BABYLON.Vector3(0, -1, 0), Math.PI / 3, 2, scene);
+		// light.transformedDirection = new BABYLON.Vector3(90, 0, 0);
+		// light.range = 100;
+		// light.lightmapMode = BABYLON.Light.LIGHTMAP_SPECULAR;
+		light.specular = new BABYLON.Color3(0, 0, 0);
+		light.intensity = 1;
+		light.groundColor = new BABYLON.Color3(0.1, 0.1, 0.1, 0.51);
+
+		var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+		// shadowGenerator.useBlurExponentialShadowMap = true;
 
 		const axes = new BABYLON.AxesViewer(scene, 2);
 		axes.xAxis.parent = light;
@@ -104,14 +118,22 @@ var canvas = document.getElementById("renderCanvas");
 		redMaterial = new BABYLON.StandardMaterial("RedMaterial");
 		redMaterial.diffuseColor = new BABYLON.Color3(0.8,0.4,0.5);
 		redMaterial.emissiveColor = new BABYLON.Color3(0.8,0.4,0.5);
+		redMaterial.diffuseTexture = new BABYLON.Texture("/models/texture/tex_u1_v1_diffuse.jpg");
+		redMaterial.emissiveTexture = new BABYLON.Texture("/models/textures/tex_u1_v1_baseColor.jpeg");
+		// redMaterial.diffuseTexture = new BABYLON.Texture("/models/Texture.png");
+		// redMaterial.emissiveTexture = new BABYLON.Texture("/models/Texture.png");
 
 		blueMaterial = new BABYLON.StandardMaterial("RedMaterial");
 		blueMaterial.diffuseColor = new BABYLON.Color3(0.5,0.4,0.8);
 		blueMaterial.emissiveColor = new BABYLON.Color3(0.5,0.4,0.8);
+		blueMaterial.diffuseTexture = new BABYLON.Texture("/models/texture/tex_u1_v1_diffuse.jpg");
+		blueMaterial.emissiveTexture = new BABYLON.Texture("/models/textures/tex_u1_v1_baseColor.jpeg");
 
 		greenMaterial = new BABYLON.StandardMaterial("RedMaterial");
 		greenMaterial.diffuseColor = new BABYLON.Color3(0.5,0.8,0.5);
 		greenMaterial.emissiveColor = new BABYLON.Color3(0.5,0.8,0.5);
+		// greenMaterial.diffuseTexture = new BABYLON.Texture("/models/texture/tex_u1_v1_diffuse.jpg");
+		// greenMaterial.emissiveTexture = new BABYLON.Texture("/models/textures/tex_u1_v1_baseColor.jpeg");
 	
 		//load our wheel material
 		wheelMaterial = new BABYLON.StandardMaterial("WheelMaterial"); 
@@ -137,9 +159,9 @@ var canvas = document.getElementById("renderCanvas");
 		// ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
 		// ground.material = new BABYLON.GridMaterial("groundMaterial");
 		let ground = new BABYLON.MeshBuilder.CreateBox('box', {
-			width: 100,
-			depth: 100,
-			height: 0.1
+			width: 460,
+			depth: 460,
+			height: 0.5
 		}, scene);
 		matGround  = new BABYLON.StandardMaterial("material", scene); 
 		matGround.alpha = 0.7;
@@ -150,45 +172,48 @@ var canvas = document.getElementById("renderCanvas");
 		ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
 		ground.receiveShadows = true;
 
-		// //create obstacles
-		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,25),new BABYLON.Vector3(-Math.PI/8,0,0),0);
-		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(25,0,0),new BABYLON.Vector3(-Math.PI/8,Math.PI/2,0),0);
-		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,-25),new BABYLON.Vector3(Math.PI/8,0,0),0);
-		// createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(-25,0,0),new BABYLON.Vector3(Math.PI/8,Math.PI/2,0),0);
+		//create obstacles
+		createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,25),new BABYLON.Vector3(-Math.PI/8,0,0),0);
+		createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(25,0,0),new BABYLON.Vector3(-Math.PI/8,Math.PI/2,0),0);
+		createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,-25),new BABYLON.Vector3(Math.PI/8,0,0),0);
+		createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(-25,0,0),new BABYLON.Vector3(Math.PI/8,Math.PI/2,0),0);
 	   
-		// //we randomize the creation of obstacles by making boxes of arbitrary size and orientation
-		// let s = new BABYLON.Vector3();
-		// let p = new BABYLON.Vector3();
-		// let r = new BABYLON.Vector3();
-		// for(let i=0;i<20;i++){
-		// 	let m = Math.random()*300-150+5;
-		// 	let m3 = Math.random()*300-150+5;
-		// 	let m2 = Math.random()*10;
-		// 	s.set(m2,m2,m2);
-		// 	p.set(m3,0,m);
-		// 	r.set(m,m,m);
-		// 	createObstacle(s,p,r,0);
-		// }
+		//we randomize the creation of obstacles by making boxes of arbitrary size and orientation
+		let s = new BABYLON.Vector3();
+		let p = new BABYLON.Vector3();
+		let r = new BABYLON.Vector3();
+		for(let i=0;i<20;i++){
+			let m = Math.random()*300-150+5;
+			let m3 = Math.random()*300-150+5;
+			let m2 = Math.random()*10;
+			s.set(m2,m2,m2);
+			p.set(m3,0,m);
+			r.set(m,m,m);
+			let as = createObstacle(s,p,r,0);
 
-		// //we randomize some more obstacles by making boxes of arbitrary size and orientation
-		// for(let i=0;i<30;i++){
-		// 	let m = Math.random()*300-150+5;
-		// 	let m3 = Math.random()*300-150+5;
-		// 	let m2 = Math.random()*3;
-		// 	s.set(m2,m2,m2);
-		// 	p.set(m3,0,m);
-		// 	r.set(m,m,m);
-		// 	createObstacle(s,p,r,5);
-		// }
+			as.receiveShadows = true;
+			shadowGenerator.addShadowCaster(as);
+		}
 
-		// //load the pink spiral ramp mesh
-		// loadTriangleMesh(scene);
+		//we randomize some more obstacles by making boxes of arbitrary size and orientation
+		for(let i=0;i<30;i++){
+			let m = Math.random()*300-150+5;
+			let m3 = Math.random()*300-150+5;
+			let m2 = Math.random()*3;
+			s.set(m2,m2,m2);
+			p.set(m3,0,m);
+			r.set(m,m,m);
+			createObstacle(s,p,r,5);
+		}
+
+		//load the pink spiral ramp mesh
+		loadTriangleMesh(scene);
 
 		//create our car
 		// createVehicle(scene, new BABYLON.Vector3(0, 4, -20), ZERO_QUATERNION);
 
-		scene.clearColor = new BABYLON.Color3.FromHexString("#10111e");
-                scene.ambientColor = BABYLON.Color3.White();
+		scene.clearColor = new BABYLON.Color3.FromHexString("#0099ff");
+		scene.ambientColor = BABYLON.Color3.White();
 
 		BABYLON.SceneLoader.ImportMesh(
             null,
@@ -199,11 +224,15 @@ var canvas = document.getElementById("renderCanvas");
                 let map = meshArray[0];
 				map.position.y = 1;
 				map.position.x = 2;
+
+				// map.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/wheel.png");
 				
 				const axes = new BABYLON.AxesViewer(scene, 2);
-				axes.xAxis.parent = chassisMesh;
-				axes.yAxis.parent = chassisMesh;
-				axes.zAxis.parent = chassisMesh;
+				axes.xAxis.parent = map;
+				axes.yAxis.parent = map;
+				axes.zAxis.parent = map;
+
+				// map.receiveShadows = true;
 
 				map.physicsImpostor = new BABYLON.PhysicsImpostor(
 					map, 
@@ -214,7 +243,43 @@ var canvas = document.getElementById("renderCanvas");
 						restitution: 0.7 
 					}
 				);
-				shadowGenerator.addShadowCaster(map);
+				// shadowGenerator.addShadowCaster(map);
+			}
+		);
+
+		BABYLON.SceneLoader.ImportMesh(
+            null,
+            'models/',
+            'serp_molot.babylon',
+            scene,
+            (meshArray)=>{
+                let serp_molot = meshArray[0];
+				serp_molot.position.y = 2;
+				serp_molot.position.z = 15;
+				serp_molot.rotate(BABYLON.Axis.Y, Math.PI/3, BABYLON.Space.LOCAL);
+				serp_molot.rotate(BABYLON.Axis.Z, Math.PI/3, BABYLON.Space.LOCAL);
+				// serp_molot.position.x = 2;
+				// serp_molot.translate(BABYLON.Axis.Y, 2, BABYLON.Space.LOCAL);
+
+				serp_molot.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/wheel.png");
+				
+				const axes = new BABYLON.AxesViewer(scene, 2);
+				axes.xAxis.parent = serp_molot;
+				axes.yAxis.parent = serp_molot;
+				axes.zAxis.parent = serp_molot;
+
+				// serp_molot.receiveShadows = true;
+
+				serp_molot.physicsImpostor = new BABYLON.PhysicsImpostor(
+					serp_molot, 
+					BABYLON.PhysicsImpostor.BoxImpostor, 
+					{ 
+						mass: 0, 
+						friction: 0.5, 
+						restitution: 0.7 
+					}
+				);
+				shadowGenerator.addShadowCaster(serp_molot);
 			}
 		);
 
@@ -342,7 +407,7 @@ var canvas = document.getElementById("renderCanvas");
 				chassisMesh.position.set(p.x(), p.y(), p.z()); 
 				chassisMesh.rotationQuaternion.set(q.x(), q.y(), q.z(), q.w());  
 				
-				// chassisMesh.translate(BABYLON.Axis.Y, 1.8, BABYLON.Space.LOCAL);
+				chassisMesh.translate(BABYLON.Axis.Y, 1.8, BABYLON.Space.LOCAL);
 				// chassisMesh.translate(BABYLON.Axis.X, -1.8, BABYLON.Space.LOCAL);
 				// chassisMesh.rotate(BABYLON.Axis.Y, 3*Math.PI/2, BABYLON.Space.LOCAL);
 			} 
@@ -399,6 +464,9 @@ var canvas = document.getElementById("renderCanvas");
 				let rbInfo = new Ammo.btRigidBodyConstructionInfo(0, motionState, shape, localInertia);
 				let body = new Ammo.btRigidBody(rbInfo);
 				physicsWorld.addRigidBody(body);
+
+				// mesh.receiveShadows = true;
+				// shadowGenerator.addShadowCaster(mesh);
 			}
 		});			
 	}
@@ -418,7 +486,10 @@ var canvas = document.getElementById("renderCanvas");
 
 		}
 		box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: mass, friction: 0.5, restitution: 0.7 });
-	  
+		
+		return box;
+		// box.receiveShadows = true;
+		// shadowGenerator.addShadowCaster(box);
 	}
 
 
