@@ -103,7 +103,7 @@ var canvas = document.getElementById("renderCanvas");
 		// light.lightmapMode = BABYLON.Light.LIGHTMAP_SPECULAR;
 		light.specular = new BABYLON.Color3(0, 0, 0);
 		light.intensity = 1;
-		light.groundColor = new BABYLON.Color3(0.1, 0.1, 0.1, 0.51);
+		light.groundColor = new BABYLON.Color3(1, 1, 1);
 
 		var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
 		// shadowGenerator.useBlurExponentialShadowMap = true;
@@ -203,7 +203,10 @@ var canvas = document.getElementById("renderCanvas");
 			s.set(m2,m2,m2);
 			p.set(m3,0,m);
 			r.set(m,m,m);
-			createObstacle(s,p,r,5);
+			let as = createObstacle(s,p,r,5);
+
+			as.receiveShadows = true;
+			shadowGenerator.addShadowCaster(as);
 		}
 
 		//load the pink spiral ramp mesh
