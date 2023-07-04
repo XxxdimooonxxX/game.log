@@ -81,6 +81,10 @@ var canvas = document.getElementById("renderCanvas");
 	{
 		// Setup basic scene
 		var scene = new BABYLON.Scene(engine);
+
+		scene.debugLayer.show({
+			embedMode: true,
+		});
 		
 		//we create our car follow camera in createChassisMesh function
 		var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10));
@@ -88,7 +92,7 @@ var canvas = document.getElementById("renderCanvas");
 		camera.attachControl(canvas, true);
 		
 		//create our light
-		// var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(-10, 10, 0));
+		var light = new BABYLON.PointLight("light2", new BABYLON.Vector3(-10, 10, 0));
 		// light2.specular = new BABYLON.Color3(0, 0, 0);
 		// light2.intensity = 500.7;
 		// light2.lightmapMode = BABYLON.Light.LIGHTMAP_SPECULAR;
@@ -96,7 +100,7 @@ var canvas = document.getElementById("renderCanvas");
 
 		// var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
 		// var light = new BABYLON.PointLight("light1", new BABYLON.Vector3(10, 10, 0));
-		var light = new BABYLON.DirectionalLight("light1", new BABYLON.Vector3(-10, -10, 0), scene);
+		// var light = new BABYLON.DirectionalLight("light1", new BABYLON.Vector3(-10, -10, 0), scene);
 		// var light = new BABYLON.SpotLight("spotLight", new BABYLON.Vector3(10, 10, 0), new BABYLON.Vector3(0, -1, 0), Math.PI / 3, 2, scene);
 		// light.transformedDirection = new BABYLON.Vector3(90, 0, 0);
 		// light.range = 100;
@@ -170,7 +174,7 @@ var canvas = document.getElementById("renderCanvas");
 
 		
 		ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.5, restitution: 0.7 });
-		ground.receiveShadows = true;
+		// ground.receiveShadows = true;
 
 		//create obstacles
 		createObstacle(new BABYLON.Vector3(4,1,12),new BABYLON.Vector3(0,0,25),new BABYLON.Vector3(-Math.PI/8,0,0),0);
@@ -225,6 +229,7 @@ var canvas = document.getElementById("renderCanvas");
             scene,
             (meshArray)=>{
                 let map = meshArray[0];
+				console.log(meshArray);
 				map.position.y = 1;
 				map.position.x = 2;
 
@@ -246,6 +251,7 @@ var canvas = document.getElementById("renderCanvas");
 						restitution: 0.7 
 					}
 				);
+				map.receiveShadows = true;
 				// shadowGenerator.addShadowCaster(map);
 			}
 		);
@@ -468,7 +474,7 @@ var canvas = document.getElementById("renderCanvas");
 				let body = new Ammo.btRigidBody(rbInfo);
 				physicsWorld.addRigidBody(body);
 
-				// mesh.receiveShadows = true;
+				mesh.receiveShadows = true;
 				// shadowGenerator.addShadowCaster(mesh);
 			}
 		});			
@@ -653,6 +659,8 @@ var canvas = document.getElementById("renderCanvas");
 	initFunction().then(
 		() => {
 			scene.then(returnedScene => { sceneToRender = returnedScene; });
+
+			
 		}
 	);
 
